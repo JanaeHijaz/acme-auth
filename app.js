@@ -26,6 +26,7 @@ app.post('/api/auth', async(req, res, next)=> {
 });
 /*
 6.  
+the GET route to api/auth is often called the "ME" route, since it tells you who you are.
 this GET request is initiated by the attemptTokenLogin function.
 we send the GET request with the token in order to get additional information about the user.
 this GET request takes in the req.headers.authorization, which in the network tab under Request Headers, is the user.id (will be a JWT token later).

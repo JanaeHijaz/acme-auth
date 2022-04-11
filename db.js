@@ -32,8 +32,14 @@ this.state = {
 }
 */
 User.byToken = async(token)=> {
+  // before, we were finding the user by the id (Pk), now we will find by the token.
+  // however, in order to use this token, we need to unscramble it using jwt.verify.
   try {
-    const user = await User.findByPk(token); // since the token is currently the user.id, we can use findByPk. 
+    const unscrambledToken = jwt.verify(token, 'brogle')
+    console.log(unscrambledToken) // prints: { userId: 2, iat: 1649701785 }
+    const user = await User.findByPk(unscrambledToken.userId); 
+    // before, the token was the user.id, so we could use findByPk. 
+    // now, we are using JWT so we take the user.id value of unscrambledToken. 
     if(user){
       return user;
     }
@@ -65,7 +71,9 @@ User.authenticate = async({ username, password })=> {
     }
   });
   if(user){
-    return user.id; 
+    const newToken = jwt.sign({ userId: user.id }, "brogle") // brogle is the secretKey.
+    return newToken;
+    // return user.id; // now want to replace this with JWT. 
   }
   const error = Error('bad credentials');
   error.status = 401;
