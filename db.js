@@ -35,7 +35,8 @@ User.byToken = async(token)=> {
   // before, we were finding the user by the id (Pk), now we will find by the token.
   // however, in order to use this token, we need to unscramble it using jwt.verify.
   try {
-    const unscrambledToken = jwt.verify(token, 'brogle')
+    console.log(process.env.JWT)
+    const unscrambledToken = jwt.verify(token, process.env.JWT)
     console.log(unscrambledToken) // prints: { userId: 2, iat: 1649701785 }
     const user = await User.findByPk(unscrambledToken.userId); 
     // before, the token was the user.id, so we could use findByPk. 
@@ -71,7 +72,7 @@ User.authenticate = async({ username, password })=> {
     }
   });
   if(user){
-    const newToken = jwt.sign({ userId: user.id }, "brogle") // brogle is the secretKey.
+    const newToken = jwt.sign({ userId: user.id }, process.env.JWT) // brogle is the secretKey.
     return newToken;
     // return user.id; // now want to replace this with JWT. 
   }

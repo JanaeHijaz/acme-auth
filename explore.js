@@ -35,6 +35,11 @@ Two main methods that we need to use with JWT:
 
 const token = jwt.sign({ name: "janae" }, "velblouds");
 const transformedBack = jwt.verify(token, "velblouds");
+
+confirm how to update your bashrc or zshrc instead of setting JWT secret key in package.json
+
+
+
 */
 
 
