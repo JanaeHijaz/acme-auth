@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const Sequelize = require('sequelize');
 const { STRING } = Sequelize;
 const config = {
@@ -65,13 +66,31 @@ If the log in credentials are inaccurate, OR the user cannot be found, this func
 The user.id that is returned (if successful), will then be sent BACK from the server (back in the POST request) as the token (for now).
 */
 User.authenticate = async({ username, password })=> {
+  /* 
+  previously, we were comparing username and password to username and password.
+  now that we are using bcrypt to hash the password, it does not appear as "lucy_pw" in the datatebase.
+  so how to we authenticate the user if the password is hashed?
+  we use bcrypt.compareSync()
+  */
   const user = await User.findOne({
     where: {
       username,
-      password
+      // password // remove this, and just search for user based on the username
     }
   });
-  if(user){
+  
+  // add new instructions for is there isn't a user found from the log in input.
+
+  if (!user){
+    const error = Error('bad credentials');
+    error.status = 401;
+    throw error;
+  }
+
+ // now create a variable for the comparison of the input password and hashed pw in the db.
+  const passwordsMatch = bcrypt.compareSync(password, user.password); // returns a boolean
+
+  if(passwordsMatch){ // change this from (user) since we want the boolean of the compareSync above.
     const newToken = jwt.sign({ userId: user.id }, process.env.JWT) // brogle is the secretKey.
     return newToken;
     // return user.id; // now want to replace this with JWT. 
@@ -84,9 +103,9 @@ User.authenticate = async({ username, password })=> {
 const syncAndSeed = async()=> {
   await conn.sync({ force: true });
   const credentials = [
-    { username: 'lucy', password: 'lucy_pw'},
-    { username: 'moe', password: 'moe_pw'},
-    { username: 'larry', password: 'larry_pw'}
+    { username: 'lucy', password: bcrypt.hashSync('lucy_pw', 10)}, // added bcrpyt to user model data
+    { username: 'moe', password: bcrypt.hashSync('moe_pw', 10)},
+    { username: 'larry', password: bcrypt.hashSync('larry_pw', 10)}
   ];
   const [lucy, moe, larry] = await Promise.all(
     credentials.map( credential => User.create(credential))
