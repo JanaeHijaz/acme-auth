@@ -56,6 +56,15 @@
         window.localStorage.removeItem('token');
         this.setState({ auth: {}});
       }
+      
+      /*
+      5. 
+      attemptTokenLogin is called at the end of the signIn function. 
+      Here, we are taking the *POSSIBLE* token that we retrieve from localStorage using getItem.
+      we are then setting that to a variable called token. 
+      Notice that there may NOT be a token, in which case the rest of this function would not even run.
+      but if there is, we then send a GET request with that token, including the token as the headers authorization.
+      */
       async attemptTokenLogin(){
         const token = window.localStorage.getItem('token');
         if(token){
@@ -65,16 +74,47 @@
             }
           });
           this.setState({ auth: response.data });
+          /*
+          8. final step in authentication process: state is set on line 76. 
+          this.state = {
+            auth: {
+              username: username, 
+              password: password
+            }
+          }
+        */
         }
       }
       componentDidMount(){
         this.attemptTokenLogin();
+        // notice that componentDidMount calls the attemptTokenLogin function as well
+        // this is why when you refresh, the GET request attempts to set the state again with the current user.
       }
+      
+      /* 
+      1.
+      the signIn function is the first step of the log in/authenticaion process, in which the user enters their username and password into the form.
+      that submission makes the first http request (POST) to api/auth with "credentials"". 
+      these credentials are the username and password strings, that will be used in the post request as "req.body". 
+      In the network tab, this is found in the "payload" tab. 
+      */
       async signIn(credentials){
         let response = await axios.post('/api/auth', credentials);
         const { token } = response.data;
-        window.localStorage.setItem('token', token);
-        this.attemptTokenLogin();
+        window.localStorage.setItem('token', token); 
+        /*
+        4.
+        When we receive the token, it is stored in localStorage in the client browser. 
+        What is localStorage? it can be found in any website that you go to by going to the 'Application' tab in dev tools. 
+        It is a feature in your browser that remembers some simple data as key/value pairs. 
+        Even if you refresh the page, that data will remain in localStorage. 
+        We store the token in localStorage so that when the user refreshes or goes back to the site later, the browser remembers the login and
+        can continue identifying itself as {token: 2} aka Lucy (or whoever). 
+        to add things to localStorage, you use setItem() (line 84). 
+        to retrieve info from localStorage, you use getItem(). 
+        */
+        this.attemptTokenLogin(); // Then within the same signIn function, after the token is saved in localStorage, we cann attemptTokenLogin (below)
+         
       }
       render(){
         const { auth } = this.state;
