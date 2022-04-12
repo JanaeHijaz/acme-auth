@@ -16,6 +16,13 @@ const User = conn.define('user', {
   password: STRING
 });
 
+const Note = conn.define('note', {
+  text: STRING
+});
+
+Note.belongsTo(User);
+User.hasMany(Note);
+
 /*
 7. 
 this byToken class method (function) is called by the api GET request. 
@@ -91,7 +98,7 @@ User.authenticate = async({ username, password })=> {
   const passwordsMatch = bcrypt.compareSync(password, user.password); // returns a boolean
 
   if(passwordsMatch){ // change this from (user) since we want the boolean of the compareSync above.
-    const newToken = jwt.sign({ userId: user.id }, process.env.JWT) // brogle is the secretKey.
+    const newToken = jwt.sign({ userId: user.id }, process.env.JWT) // brogle is the secretKey
     return newToken;
     // return user.id; // now want to replace this with JWT. 
   }
@@ -110,6 +117,12 @@ const syncAndSeed = async()=> {
   const [lucy, moe, larry] = await Promise.all(
     credentials.map( credential => User.create(credential))
   );
+  const notes = [ { text: 'hello world' }, { text: 'reminder to buy groceries' }, { text: 'reminder to do laundry' } ];
+  const [note1, note2, note3] = await Promise.all(
+    notes.map( note => Note.create(note) )
+  );
+  await lucy.setNotes(note1);
+  await moe.setNotes([note2, note3]);
   return {
     users: {
       lucy,
@@ -122,6 +135,7 @@ const syncAndSeed = async()=> {
 module.exports = {
   syncAndSeed,
   models: {
-    User
+    User,
+    Note
   }
 };
